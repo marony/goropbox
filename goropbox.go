@@ -6,6 +6,7 @@ import (
 	"./monitor"
 	"./executor"
 	"fmt"
+	"flag"
 	"os"
 	"os/signal"
 	"github.com/mitchellh/go-homedir"
@@ -14,12 +15,16 @@ import (
 	_ "reflect"
 )
 
-// 監視するディレクトリ
-const dropbox_dir = "~/Dropbox/goropbox"
-
 // まいんちゃん
 func main() {
-	
+	// コマンド引数
+	var (
+		dir = flag.String("dir", "~/Dropbox/goropbox", "監視するディレクトリ")
+		interval = flag.Int("interval", 60, "監視する間隔(秒)")
+		count = flag.Int("count", 0, "監視する回数(0 = 無限)")
+	)
+	flag.Parse()
+
 	// [【Go言語】Ctrl\+cなどによるSIGINTの捕捉とdeferの実行 \- DRYな備忘録](http://otiai10.hatenablog.com/entry/2018/02/19/165228)
 	defer teardown()
 
@@ -29,7 +34,7 @@ func main() {
 
 	// 終了検知用チャネル
     done := make(chan error, 1)
-    go do(done)
+    go do(done, *dir, *interval, *count)
 
     select {
     case sig := <-c:
@@ -48,16 +53,16 @@ func main() {
 }
 
 // 実際の処理
-func do(done chan<- error) {
+func do(done chan<- error, dir string, interval, count int) {
 	// ディレクトリパスの"~"を展開する
-	dir, err := homedir.Expand(dropbox_dir)
+	dir, err := homedir.Expand(dir)
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Println("監視ディレクトリ: " + dir)
 
-	monitor.Execute(dir, executor.Process, complete)
+	monitor.Execute(dir, interval, count, executor.Process, complete)
 
 	// 終了
 	done <- nil

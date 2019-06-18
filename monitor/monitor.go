@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"sort"
+	"time"
 )
 
 type FileInfos []os.FileInfo
@@ -24,19 +25,33 @@ func (fi ByModTime) Less(i, j int) bool {
 }
 
 // ディレクトリからリクエストファイルを検索してfを呼び出す
-func Execute(dir string, process func(string) (bool, string, string, int, error), complete func(string, string, string, int, error)) {
-	// ファイル一覧の取得
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		panic(err)
-	}
+func Execute(dir string, interval, count int, process func(string) (bool, string, string, int, error), complete func(string, string, string, int, error)) {
+	f := func() {
+		// ファイル一覧の取得
+		files, err := ioutil.ReadDir(dir)
+		if err != nil {
+			panic(err)
+		}
 
-	sort.Sort(ByModTime{files})
-	for _, fi := range files {
-		path := filepath.Join(dir, fi.Name())
-		flag, stdout, stderr, exitCode, err := process(path)
-		if flag {
-			complete(path, stdout, stderr, exitCode, err)
+		sort.Sort(ByModTime{files})
+		for _, fi := range files {
+			path := filepath.Join(dir, fi.Name())
+			flag, stdout, stderr, exitCode, err := process(path)
+			if flag {
+				complete(path, stdout, stderr, exitCode, err)
+			}
+		}
+	}
+	
+	if count == 0 {
+		for {
+			f()
+			time.Sleep(time.Duration(interval) * time.Second)
+		}
+	} else {
+		for i := 0; i < count; i++ {
+			f()
+			time.Sleep(time.Duration(interval) * time.Second)
 		}
 	}
 }

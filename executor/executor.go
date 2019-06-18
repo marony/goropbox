@@ -15,30 +15,30 @@ func isRequestFile(path string) bool {
 }
 
 // リクエストファイルを読み込みコマンドを実行をする
-func Process(path string) (flag bool, stdout, stderr string, exitCode int, err error) {
+func Process(path string) (flag bool, stdout, stderr string, exitCode int, err2 error) {
 	if !isRequestFile(path) {
-		println("リクエストファイルではありません: ", path)
 		return
 	}
 
-	fmt.Println("処理します: ", path)
 	machineName, command := getContent(path)
 
-	mine, err := os.Hostname()
-	if err != nil {
-		panic(err)
-	}
-	if strings.ToUpper(mine) != strings.ToUpper(machineName) {
-		println("ホスト名が一致しません: ", mine, " != ", machineName)
-		return
-	}
+	if len(machineName) > 0 && len(command) > 0 {
+		mine, err := os.Hostname()
+		if err != nil {
+			panic(err)
+		}
+		if strings.ToUpper(mine) != strings.ToUpper(machineName) {
+			println("ホスト名が一致しません: ", path, mine, " != ", machineName)
+			return
+		}
 
-	stdout, stderr, exitCode, err = execute(command)
-	fmt.Println("stdout: ", stdout)
-	fmt.Println("stderr: ", stderr)
-	fmt.Println("exitCode: ", exitCode)
-	fmt.Println("err: ", err)
-	flag = true
+		stdout, stderr, exitCode, err2 = execute(command)
+		fmt.Println("stdout: ", stdout)
+		fmt.Println("stderr: ", stderr)
+		fmt.Println("exitCode: ", exitCode)
+		fmt.Println("err: ", err2)
+		flag = true
+	}
 
 	return
 }
@@ -54,14 +54,14 @@ func getContent(path string) (machineName, command string) {
 	s := bufio.NewScanner(f)
 	// マシン名
 	if !s.Scan() {
-		println("ホスト名が読み取れません")
+		println("ホスト名が読み取れません: ", path)
 		return
 	}
 	machineName = s.Text()
 
 	// コマンド
 	if !s.Scan() {
-		println("コマンドが読み取れません")
+		println("コマンドが読み取れません: ", path)
 		return
 	}
 	command = s.Text()
