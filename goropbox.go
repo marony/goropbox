@@ -70,7 +70,7 @@ func do(done chan<- error, dir string, interval, count int) {
 }
 
 // リクエストファイルをリネームし、実行結果をファイルとして出力する
-func complete(path, stdout, stderr string, exitCode int, err error) {
+func complete(path string, startTime time.Time, stdout, stderr string, exitCode int, err error) {
 	mine, err := os.Hostname()
 	if err != nil {
 		panic(err)
@@ -85,6 +85,8 @@ func complete(path, stdout, stderr string, exitCode int, err error) {
 
 		defer f.Close()
 		f.Write(([]byte)(mine))
+		f.Write(([]byte)("\n"))
+		f.Write(([]byte)(startTime.String()))
 		f.Write(([]byte)("\n"))
 		f.Write(([]byte)(time.Now().String()))
 		f.Write(([]byte)("\n"))

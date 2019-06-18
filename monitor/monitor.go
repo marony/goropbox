@@ -25,7 +25,7 @@ func (fi ByModTime) Less(i, j int) bool {
 }
 
 // ディレクトリからリクエストファイルを検索してfを呼び出す
-func Execute(dir string, interval, count int, process func(string) (bool, string, string, int, error), complete func(string, string, string, int, error)) {
+func Execute(dir string, interval, count int, process func(string) (bool, string, string, int, error), complete func(string, time.Time, string, string, int, error)) {
 	f := func() {
 		// ファイル一覧の取得
 		files, err := ioutil.ReadDir(dir)
@@ -36,9 +36,10 @@ func Execute(dir string, interval, count int, process func(string) (bool, string
 		sort.Sort(ByModTime{files})
 		for _, fi := range files {
 			path := filepath.Join(dir, fi.Name())
+			startTime := time.Now()
 			flag, stdout, stderr, exitCode, err := process(path)
 			if flag {
-				complete(path, stdout, stderr, exitCode, err)
+				complete(path, startTime, stdout, stderr, exitCode, err)
 			}
 		}
 	}
