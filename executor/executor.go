@@ -8,10 +8,12 @@ import (
 	"io/ioutil"
 	"bufio"
 	"syscall"
+	"time"
+	"strconv"
 )
 
 func isRequestFile(path string) bool {
-	return strings.Contains(strings.ToUpper(path), ".REQ")
+	return strings.HasSuffix(strings.ToUpper(path), ".REQ")
 }
 
 // リクエストファイルを読み込みコマンドを実行をする
@@ -40,7 +42,46 @@ func Process(path string) {
 	fmt.Println("exitCode: ", exitCode)
 	fmt.Println("err: ", err)
 
-	// TODO: リネーム & 結果ファイル作成
+	// 結果出力
+	{
+		f, err := os.Create(path + ".res")
+		if err != nil {
+			panic(err)
+		}
+
+		defer f.Close()
+		f.Write(([]byte)(mine))
+		f.Write(([]byte)("\n"))
+		f.Write(([]byte)(time.Now().String()))
+		f.Write(([]byte)("\n"))
+		f.Write(([]byte)(strconv.Itoa(exitCode)))
+		f.Write(([]byte)("\n"))
+	}
+
+	if len(stdout) > 0 {
+		f, err := os.Create(path + ".out")
+		if err != nil {
+			panic(err)
+		}
+
+		defer f.Close()
+		f.Write(([]byte)(stdout))
+	}
+
+	if len(stderr) > 0 {
+		f, err := os.Create(path + ".err")
+		if err != nil {
+			panic(err)
+		}
+
+		defer f.Close()
+		f.Write(([]byte)(stderr))
+	}
+
+	// リクエストファイルのファイル名変更
+	if err = os.Rename(path, path + ".done"); err != nil {
+		panic(err)
+	}
 
 	return
 }
@@ -90,8 +131,7 @@ func runCommand(cmd *exec.Cmd) (stdout, stderr string, exitCode int, err error) 
 		panic(err)
 	}
 
-	err = cmd.Start()
-	if err != nil {
+	if err = cmd.Start(); err != nil {
 		panic(err)
 	}
 
@@ -106,9 +146,7 @@ func runCommand(cmd *exec.Cmd) (stdout, stderr string, exitCode int, err error) 
 	}
 	stderr = string(stderr_)
 
-	err = cmd.Wait()
-
-	if err != nil {
+	if err = cmd.Wait(); err != nil {
 		if err2, ok := err.(*exec.ExitError); ok {
 			if s, ok := err2.Sys().(syscall.WaitStatus); ok {
 				err = nil
