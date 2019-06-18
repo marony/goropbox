@@ -8,8 +8,6 @@ import (
 	"io/ioutil"
 	"bufio"
 	"syscall"
-	"time"
-	"strconv"
 )
 
 func isRequestFile(path string) bool {
@@ -17,8 +15,7 @@ func isRequestFile(path string) bool {
 }
 
 // リクエストファイルを読み込みコマンドを実行をする
-// リクエストファイルをリネームし、l実行結果をファイルとして出力する
-func Process(path string) {
+func Process(path string) (flag bool, stdout, stderr string, exitCode int, err error) {
 	if !isRequestFile(path) {
 		println("リクエストファイルではありません: ", path)
 		return
@@ -36,52 +33,12 @@ func Process(path string) {
 		return
 	}
 
-	stdout, stderr, exitCode, err := execute(command)
+	stdout, stderr, exitCode, err = execute(command)
 	fmt.Println("stdout: ", stdout)
 	fmt.Println("stderr: ", stderr)
 	fmt.Println("exitCode: ", exitCode)
 	fmt.Println("err: ", err)
-
-	// 結果出力
-	{
-		f, err := os.Create(path + ".res")
-		if err != nil {
-			panic(err)
-		}
-
-		defer f.Close()
-		f.Write(([]byte)(mine))
-		f.Write(([]byte)("\n"))
-		f.Write(([]byte)(time.Now().String()))
-		f.Write(([]byte)("\n"))
-		f.Write(([]byte)(strconv.Itoa(exitCode)))
-		f.Write(([]byte)("\n"))
-	}
-
-	if len(stdout) > 0 {
-		f, err := os.Create(path + ".out")
-		if err != nil {
-			panic(err)
-		}
-
-		defer f.Close()
-		f.Write(([]byte)(stdout))
-	}
-
-	if len(stderr) > 0 {
-		f, err := os.Create(path + ".err")
-		if err != nil {
-			panic(err)
-		}
-
-		defer f.Close()
-		f.Write(([]byte)(stderr))
-	}
-
-	// リクエストファイルのファイル名変更
-	if err = os.Rename(path, path + ".done"); err != nil {
-		panic(err)
-	}
+	flag = true
 
 	return
 }
