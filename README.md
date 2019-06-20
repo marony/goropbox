@@ -18,7 +18,7 @@ $ go run goropbox.go -dir 監視ディレクトリ -interval 監視する間隔 
 vi 監視するディレクトリ/request1.req
 ```
 マシン名
-sh -c ls -l
+sh -c "ls -l /"
 ```
 
 DropboxでリモートPCにリクエストファイルが同期され、goropboxによりコマンドが実行され結果がファイルとして出力されます。
@@ -35,12 +35,41 @@ cat 監視するディレクトリ/request1.req.res
 
 ### 標準出力
 
+標準出力がある場合のみ出力される。
+
 cat 監視するディレクトリ/request1.req.out
 ```
-README.md
-executor
-goropbox.go
-monitor
+total 112
+drwxr-xr-x  1 root root    512 Jun  4 15:09 bin
+drwxr-xr-x  1 root root    512 Jul 26  2018 boot
+drwxr-xr-x  1 root root    512 Jun 20 14:01 dev
+drwxr-xr-x  1 root root    512 Jun  7 11:13 etc
+drwxr-xr-x  1 root root    512 Apr 18 15:29 home
+-rwxr-xr-x  1 root root 112600 Jan  1  1970 init
+drwxr-xr-x  1 root root    512 May 23 17:39 lib
+drwxr-xr-x  1 root root    512 May 23 17:23 lib32
+drwxr-xr-x  1 root root    512 Jul 26  2018 lib64
+drwxr-xr-x  1 root root    512 Jul 26  2018 media
+drwxr-xr-x  1 root root    512 Apr 18 15:28 mnt
+drwxr-xr-x  1 root root    512 Jul 26  2018 opt
+dr-xr-xr-x 24 root root      0 Jun 18 12:23 proc
+drwx------  1 root root    512 Jul 26  2018 root
+drwxr-xr-x  1 root root    512 Jun 18 12:23 run
+drwxr-xr-x  1 root root    512 May 23 17:20 sbin
+drwxr-xr-x  1 root root    512 Jul 19  2018 snap
+drwxr-xr-x  1 root root    512 Jul 26  2018 srv
+dr-xr-xr-x 12 root root      0 Jun 18 12:23 sys
+drwxrwxrwt  1 root root    512 Jun 20 17:36 tmp
+drwxr-xr-x  1 root root    512 May 23 17:23 usr
+drwxr-xr-x  1 root root    512 Jul 26  2018 var
+```
+
+### 標準出力
+
+エラー出力がある場合のみ出力される。
+
+cat 監視するディレクトリ/request1.req.err
+```
 ```
 
 ### ヘルプ
