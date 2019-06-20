@@ -8,27 +8,37 @@ import (
 	"io/ioutil"
 	"bufio"
 	"syscall"
+	"encoding/csv"
 )
 
 func isRequestFile(path string) bool {
 	return strings.HasSuffix(strings.ToUpper(path), ".REQ")
 }
 
+func requestToMe(machineName string) bool {
+	if machineName == "*" {
+		return true
+	}
+
+	mine, err := os.Hostname()
+	if err != nil {
+		panic(err)
+	}
+	return strings.ToUpper(mine) != strings.ToUpper(machineName)
+}
+
 // リクエストファイルを読み込みコマンドを実行をする
 func Process(path string) (flag bool, stdout, stderr string, exitCode int, err2 error) {
 	if !isRequestFile(path) {
+		// リクエストファイルではない
 		return
 	}
 
 	machineName, command := getContent(path)
 
 	if len(machineName) > 0 && len(command) > 0 {
-		mine, err := os.Hostname()
-		if err != nil {
-			panic(err)
-		}
-		if strings.ToUpper(mine) != strings.ToUpper(machineName) {
-			println("ホスト名が一致しません: ", path, mine, " != ", machineName)
+		if requestToMe(machineName) {
+			// ホスト名が一致しない
 			return
 		}
 
@@ -72,7 +82,15 @@ func getContent(path string) (machineName, command string) {
 // [execcommandexample/main\.go at master · hnakamur/execcommandexample](https://github.com/hnakamur/execcommandexample/blob/master/main.go)
 func execute(command string) (stdout, stderr string, exitCode int, err error) {
 	fmt.Println("実行します: ", command)
-	commands := strings.Split(command, " ")
+	// '"'で囲まれた部分は1要素として' 'で区切る
+	r := csv.NewReader(strings.NewReader(command))
+    r.Comma = ' '
+    fields, err := r.Read()
+    if err != nil {
+        panic(err)
+    }
+	commands := fields
+
 	cmd := exec.Command(commands[0], commands[1:]...)
 	stdout, stderr, exitCode, err = runCommand(cmd)
 	return
